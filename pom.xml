@@ -22,6 +22,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <fastjson2.version>2.0.52</fastjson2.version>
 		<java.version>17</java.version>
+        <jsonschema.version>4.36.0</jsonschema.version>
         <langchain4j.version>0.33.0</langchain4j.version>
     </properties>
 
@@ -121,6 +122,24 @@
                 <groupId>com.alibaba.fastjson2</groupId>
                 <artifactId>fastjson2</artifactId>
                 <version>${fastjson2.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/com.github.victools/jsonschema-generator -->
+            <dependency>
+                <groupId>com.github.victools</groupId>
+                <artifactId>jsonschema-generator</artifactId>
+                <version>${jsonschema.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/com.github.victools/jsonschema-module-jackson -->
+            <dependency>
+                <groupId>com.github.victools</groupId>
+                <artifactId>jsonschema-module-jackson</artifactId>
+                <version>${jsonschema.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/com.github.victools/jsonschema-module-swagger-2 -->
+            <dependency>
+                <groupId>com.github.victools</groupId>
+                <artifactId>jsonschema-module-swagger-2</artifactId>
+                <version>${jsonschema.version}</version>
             </dependency>
             <!-- Langchain4j Base -->
             <dependency>
