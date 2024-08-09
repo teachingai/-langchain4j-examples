@@ -12,12 +12,13 @@ import org.testcontainers.weaviate.WeaviateContainer;
 import java.util.List;
 import java.util.Scanner;
 
-public class OllamaEmbeddingTest {
+public class Langchain4jOllamaRagTest {
 
     public static void main(String[] args) {
 
         try (WeaviateContainer weaviate = new WeaviateContainer("semitechnologies/weaviate:1.22.4")) {
             weaviate.start();
+
             EmbeddingStore<TextSegment> embeddingStore = WeaviateEmbeddingStore.builder()
                     .scheme("http")
                     .host(weaviate.getHttpHostAddress())
