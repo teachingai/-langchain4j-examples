@@ -9,8 +9,8 @@
     </parent>
 
     <artifactId>langchain4j-ollama-rag-redis</artifactId>
-    <name>langchain4j-ollama-redis-store</name>
-    <description>langchain4j-ollama-redis-store</description>
+    <name>langchain4j-ollama-rag-redis</name>
+    <description>langchain4j-ollama-rag-redis</description>
 
     <dependencies>
         <!-- For Lombok -->
