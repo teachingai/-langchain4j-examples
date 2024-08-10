@@ -33,17 +33,15 @@
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.github.victools/jsonschema-generator -->
+        <!-- For Jsonschema -->
         <dependency>
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-generator</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.github.victools/jsonschema-module-jackson -->
         <dependency>
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-module-jackson</artifactId>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.github.victools/jsonschema-module-swagger-2 -->
         <dependency>
             <groupId>com.github.victools</groupId>
             <artifactId>jsonschema-module-swagger-2</artifactId>

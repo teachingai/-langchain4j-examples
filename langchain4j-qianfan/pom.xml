@@ -44,10 +44,14 @@
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-qianfan</artifactId>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-spring-boot-starter</artifactId>
+        </dependency>
         <!-- For Embedding  -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-embeddings-bge-small-zh-v15</artifactId>
+            <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
         </dependency>
         <!-- For Vector Store -->
         <dependency>

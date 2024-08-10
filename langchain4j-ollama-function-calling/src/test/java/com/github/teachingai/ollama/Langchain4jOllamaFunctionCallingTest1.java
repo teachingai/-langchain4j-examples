@@ -2,7 +2,7 @@ package com.github.teachingai.ollama;
 
 import java.util.Scanner;
 
-public class OllamaFunctionCallingTest1 {
+public class Langchain4jOllamaFunctionCallingTest1 {
 
     public static void main(String[] args) {
 

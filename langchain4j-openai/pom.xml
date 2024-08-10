@@ -39,15 +39,19 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
-        <!-- For Chat Completion & Embedding -->
+        <!-- For Chat Completion -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai</artifactId>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-spring-boot-starter</artifactId>
+        </dependency>
         <!-- For Embedding  -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-embeddings-bge-small-zh-v15</artifactId>
+            <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
         </dependency>
         <!-- For Vector Store -->
         <dependency>

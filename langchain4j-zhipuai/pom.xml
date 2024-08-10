@@ -55,6 +55,10 @@
             <version>release-V4-2.0.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-spring-boot-starter</artifactId>
+        </dependency>
         <!-- For Embedding  -->
         <dependency>
             <groupId>dev.langchain4j</groupId>

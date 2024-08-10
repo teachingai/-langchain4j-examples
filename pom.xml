@@ -73,11 +73,11 @@
         <module>langchain4j-ollama-agents</module>
         <module>langchain4j-openai</module>
         <module>langchain4j-qianfan</module>
-        <module>langchain4j-stabilityai</module>
         <module>langchain4j-vertexai</module>
         <module>langchain4j-vertexai-gemini</module>
         <module>langchain4j-workersai</module>
         <module>langchain4j-zhipuai</module>
+        <module>langchain4j-project-naming</module>
         <module>langchain4j-project-sql</module>
     </modules>
 <!--

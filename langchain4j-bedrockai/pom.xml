@@ -34,6 +34,19 @@
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
         </dependency>
+        <!-- For Jsonschema -->
+        <dependency>
+            <groupId>com.github.victools</groupId>
+            <artifactId>jsonschema-generator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.victools</groupId>
+            <artifactId>jsonschema-module-jackson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.victools</groupId>
+            <artifactId>jsonschema-module-swagger-2</artifactId>
+        </dependency>
         <!-- For Log4j2 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -44,10 +57,14 @@
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-bedrock</artifactId>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-spring-boot-starter</artifactId>
+        </dependency>
         <!-- For Embedding  -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-embeddings-bge-small-zh-v15</artifactId>
+            <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
         </dependency>
         <!-- For Vector Store -->
         <dependency>

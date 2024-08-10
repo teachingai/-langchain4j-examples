@@ -74,8 +74,8 @@ LangChain4j 提供了一些 [Embedding 模型](https://github.com/langchain4j/la
 - langchain4j-embeddings-bge-small-en-v15
 - langchain4j-embeddings-bge-small-en
 - langchain4j-embeddings-bge-small-zh-q
-- langchain4j-embeddings-bge-small-zh-v15-q
-- langchain4j-embeddings-bge-small-zh-v15
+- langchain4j-embeddings-all-minilm-l6-v2-q
+- langchain4j-embeddings-all-minilm-l6-v2
 - langchain4j-embeddings-bge-small-zh
 - langchain4j-embeddings-e5-small-v2-q
 - langchain4j-embeddings-e5-small-v2
