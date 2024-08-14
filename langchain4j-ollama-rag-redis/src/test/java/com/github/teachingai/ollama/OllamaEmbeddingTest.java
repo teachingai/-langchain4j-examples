@@ -8,6 +8,7 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.redis.RedisEmbeddingStore;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.Scanner;
 
@@ -21,22 +22,13 @@ public class OllamaEmbeddingTest {
                 .modelName("shaw/dmeta-embedding-zh")
                 .build();
         // 测试数据
-        EmbeddingStore<TextSegment> vectorStore = RedisEmbeddingStore.builder()
+        RedisEmbeddingStore vectorStore = RedisEmbeddingStore.builder()
                 .host("192.168.1.170")
                 .port(16379)
                 .password("hpkRzkC7pcDnYp3e")
                 .dimension(384)
                 .build();
-        // Check if RediSearch module is loaded
-        try {
-            if (!vectorStore.isIndexExist()) {
-                System.err.println("RediSearch module is not loaded on the Redis server.");
-                return;
-            }
-        } catch (JedisDataException e) {
-            System.err.println("Error checking RediSearch module: " + e.getMessage());
-            return;
-        }
+
         vectorStore.add(embeddingModel.embed("白日依山尽，黄河入海流。欲穷千里目，更上一层楼。").content(), TextSegment.from("白日依山尽，黄河入海流。欲穷千里目，更上一层楼。"));
         vectorStore.add(embeddingModel.embed("青山依旧在，几度夕阳红。白发渔樵江渚上，惯看秋月春风。").content(), TextSegment.from("青山依旧在，几度夕阳红。白发渔樵江渚上，惯看秋月春风。"));
         vectorStore.add(embeddingModel.embed("一片孤城万仞山，羌笛何须怨杨柳。春风不度玉门关。").content(), TextSegment.from("一片孤城万仞山，羌笛何须怨杨柳。春风不度玉门关。"));
