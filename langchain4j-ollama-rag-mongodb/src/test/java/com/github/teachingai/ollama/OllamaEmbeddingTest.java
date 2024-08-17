@@ -1,6 +1,8 @@
 package com.github.teachingai.ollama;
 
 import com.alibaba.fastjson2.JSONObject;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.internal.Utils;
@@ -10,7 +12,7 @@ import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.milvus.MilvusEmbeddingStore;
+import dev.langchain4j.store.embedding.mongodb.MongoDbEmbeddingStore;
 
 import java.util.Scanner;
 
@@ -33,10 +35,12 @@ public class OllamaEmbeddingTest {
                 .modelName("shaw/dmeta-embedding-zh")
                 .build();
         // 测试数据
-        EmbeddingStore<TextSegment> embeddingStore = MilvusEmbeddingStore.builder()
-                .uri(milvusEndpoint)
+        MongoClient mongoClient = MongoClients.create("mongodb://localhost:27017");
+        EmbeddingStore<TextSegment> embeddingStore = MongoDbEmbeddingStore.builder()
+                .createIndex(true)
                 .collectionName(collectionName)
-                .dimension(384)
+                .databaseName("langchain4j")
+                .fromClient(mongoClient)
                 .build();
 
         // 将嵌入存储在 VectorStore
