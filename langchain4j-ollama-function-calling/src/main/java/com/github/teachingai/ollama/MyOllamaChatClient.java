@@ -13,7 +13,6 @@ import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.ai.model.function.AbstractFunctionCallSupport;
 import org.springframework.ai.model.function.FunctionCallbackContext;
 import org.springframework.ai.ollama.api.OllamaOptions;
-import org.springframework.ai.ollama.metadata.OllamaChatResponseMetadata;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -22,7 +21,6 @@ import reactor.core.publisher.Flux;
 
 import java.util.Base64;
 import java.util.List;
-import java.util.Objects;
 
 public class MyOllamaChatClient extends AbstractFunctionCallSupport<MyOllamaApi.Message, MyOllamaApi.ChatRequest, ResponseEntity<MyOllamaApi.ChatResponse>> implements ChatClient, StreamingChatClient {
 

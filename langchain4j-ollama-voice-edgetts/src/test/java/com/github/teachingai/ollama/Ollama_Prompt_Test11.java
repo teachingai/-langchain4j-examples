@@ -3,7 +3,6 @@ package com.github.teachingai.ollama;
 import com.github.teachingai.ollama.api.EdgeTtsNativeAudioApi;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.Generation;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;

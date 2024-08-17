@@ -6,8 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.benmanes.caffeine.cache.RemovalListener;
+import dev.langchain4j.agent.tool.P;
+import dev.langchain4j.agent.tool.Tool;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.retry.RetryUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,20 +18,18 @@ import org.springframework.web.client.RestClient;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * IP地址解析
  * http://whois.pconline.com.cn/
  */
 @Slf4j
-public class PconlineRegionFunction implements Function<PconlineRegionFunction.Request, PconlineRegionFunction.Response> {
+public class PconlineRegionFunction {
 
     // 请求连接地址
     private static final String GET_COUNTRY_BY_IP_URL = "https://whois.pconline.com.cn";
 
-    private final static RestClient restClient = RestClient.builder().baseUrl(GET_COUNTRY_BY_IP_URL)
-            .defaultStatusHandler(RetryUtils.DEFAULT_RESPONSE_ERROR_HANDLER).build();
+    private final static RestClient restClient = RestClient.builder().baseUrl(GET_COUNTRY_BY_IP_URL).build();
 
     private final static Consumer<HttpHeaders> headersConsumer = headers -> {
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -80,7 +79,9 @@ public class PconlineRegionFunction implements Function<PconlineRegionFunction.R
             });
 
 
-    public record Request(String ip) {}
+    public record Request(@JsonProperty("ip") @P("IP地址") String ip) {
+        
+    }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Response(
@@ -97,8 +98,8 @@ public class PconlineRegionFunction implements Function<PconlineRegionFunction.R
 
     }
 
-    @Override
-    public Response apply(Request request) {
+    @Tool("IP地址解析: 根据IP解析所在位置信息")
+    public Response getLocationByIp(@P("IP 请求信息") Request request) {
         Optional<JSONObject> opt = WEATHER_DATA_CACHES.get(request.ip());
         if (opt.isPresent()) {
             JSONObject jsonObject = opt.get();

@@ -1,31 +1,31 @@
 package com.github.hiwepy.vertexai.functions;
 
-import org.springframework.ai.model.function.FunctionCallback;
-import org.springframework.ai.model.function.FunctionCallbackWrapper;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.agent.tool.ToolSpecifications;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Description;
 
-import java.util.function.Function;
+import java.util.List;
 
+import static dev.langchain4j.agent.tool.JsonSchemaProperty.*;
 @Configuration
 public class FunctionConfig {
 
     @Bean
-    @Description("获取天气：根据给出的城市ID获取天气信息") // function description
-    public Function<GetWeatherFunction.Request, GetWeatherFunction.Response> weatherFunction() {
-        return new GetWeatherFunction();
-    }
+    public List<ToolSpecification> toolSpecifications() {
+        List<ToolSpecification> toolSpecifications = List.of();
 
-    @Bean
-    public FunctionCallback ipRegionFunctionInfo() {
-        return FunctionCallbackWrapper.builder(new PconlineRegionFunction())
-                .withName("getLocationByIp") // (1) function name
-                .withDescription("IP地址解析: 根据IP解析IP所在位置信息") // (2) function description
-                .withSchemaType(FunctionCallbackWrapper.Builder.SchemaType.JSON_SCHEMA) // (3) schema type. Compulsory for Gemini function calling.
-                .withInputType(PconlineRegionFunction.Request.class) // (4) input type
-                .withResponseConverter((response) -> String.format("您的IP当前位置是：%s", response.addr())) // (6) response converter
-                .build();
+        toolSpecifications.add(ToolSpecification.builder()
+                .name("getWeather")
+                .description("Returns the weather forecast for a given city")
+                .addParameter("city", type("string"), description("The city for which the weather forecast should be returned"))
+                .addParameter("unit", enums(GetWeatherFunction.TemperatureUnit.class)) // enum TemperatureUnit { CELSIUS, FAHRENHEIT }
+                .build());
+
+        toolSpecifications.addAll(ToolSpecifications.toolSpecificationsFrom(new GetWeatherFunction()));
+        toolSpecifications.addAll(ToolSpecifications.toolSpecificationsFrom(new PconlineRegionFunction()));
+
+        return toolSpecifications;
     }
 
 }

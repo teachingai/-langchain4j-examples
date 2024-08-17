@@ -1,43 +1,71 @@
 package com.github.teachingai.ollama;
 
-import org.springframework.ai.document.Document;
-import org.springframework.ai.ollama.OllamaChatClient;
-import org.springframework.ai.ollama.OllamaEmbeddingClient;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
-import org.springframework.ai.vectorstore.SimpleVectorStore;
-import org.springframework.ai.vectorstore.VectorStore;
+import com.alibaba.fastjson2.JSONObject;
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.internal.Utils;
+import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
+import dev.langchain4j.model.output.Response;
+import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
+import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.milvus.MilvusEmbeddingStore;
 
-import java.util.List;
 import java.util.Scanner;
 
 public class OllamaEmbeddingTest {
 
+    private static String milvusEndpoint = "http://localhost:11434";
+    private static String collectionName = "langchain4j-" + Utils.randomUUID();
+
     public static void main(String[] args) {
 
-        var ollamaApi = new OllamaApi();
-        //指定使用的模型
-        var embeddingClient = new OllamaEmbeddingClient(ollamaApi)
-                .withDefaultOptions(OllamaOptions.create().withModel("gemma"));
-        //测试数据
-        VectorStore vectorStore = new SimpleVectorStore(embeddingClient);
-        vectorStore.add(List.of(
-                new Document("白日依山尽，黄河入海流。欲穷千里目，更上一层楼。"),
-                new Document("青山依旧在，几度夕阳红。白发渔樵江渚上，惯看秋月春风。"),
-                new Document("一片孤城万仞山，羌笛何须怨杨柳。春风不度玉门关。"),
-                new Document("危楼高百尺，手可摘星辰。不敢高声语，恐惊天上人。")
-        ));
+        /**
+         * mxbai-embed-large ：https://ollama.com/library/mxbai-embed-large
+         * nomic-embed-text ：https://ollama.com/library/nomic-embed-text
+         * snowflake-arctic-embed ：https://ollama.com/library/snowflake-arctic-embed
+         * shaw/dmeta-embedding-zh：https://ollama.com/shaw/dmeta-embedding-zh
+         */
+        // 指定使用的模型
+        OllamaEmbeddingModel embeddingModel = OllamaEmbeddingModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("shaw/dmeta-embedding-zh")
+                .build();
+        // 测试数据
+        EmbeddingStore<TextSegment> embeddingStore = MilvusEmbeddingStore.builder()
+                .uri(milvusEndpoint)
+                .collectionName(collectionName)
+                .dimension(384)
+                .build();
+
+        // 将嵌入存储在 VectorStore
+        embeddingStore.add(embeddingModel.embed("白日依山尽，黄河入海流。欲穷千里目，更上一层楼。").content(), TextSegment.from("白日依山尽，黄河入海流。欲穷千里目，更上一层楼。"));
+        embeddingStore.add(embeddingModel.embed("青山依旧在，几度夕阳红。白发渔樵江渚上，惯看秋月春风。").content(), TextSegment.from("青山依旧在，几度夕阳红。白发渔樵江渚上，惯看秋月春风。"));
+        embeddingStore.add(embeddingModel.embed("一片孤城万仞山，羌笛何须怨杨柳。春风不度玉门关。").content(), TextSegment.from("一片孤城万仞山，羌笛何须怨杨柳。春风不度玉门关。"));
+        embeddingStore.add(embeddingModel.embed("危楼高百尺，手可摘星辰。不敢高声语，恐惊天上人。").content(), TextSegment.from("危楼高百尺，手可摘星辰。不敢高声语，恐惊天上人。"));
+        /**
+         * 2、简单的相似度搜索
+         */
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.print("请输入关键词: ");
-            String message = scanner.nextLine();
-            if (message.equals("exit")) {
+            String query = scanner.nextLine();
+            if (query.equals("exit")) {
                 break;
             }
-            List<Document> documents = vectorStore.similaritySearch(message);
+            Response<Embedding> queryEmbedding = embeddingModel.embed(query);
+            System.out.println("Embedding Query: " + queryEmbedding.content());
+            EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+                    .queryEmbedding(queryEmbedding.content())
+                    .maxResults(5)
+                    .minScore(0.1)
+                    //.filter(new IsGreaterThanOrEqualTo(key, value))
+                    .build();
+            EmbeddingSearchResult<TextSegment> embeddingSearchResult = embeddingStore.search(request);
             System.out.println("查询结果: ");
-            for (Document doc : documents) {
-                System.out.println(doc.getContent());
+            for (EmbeddingMatch<TextSegment> doc : embeddingSearchResult.matches()) {
+                System.out.println( JSONObject.of( "id", doc.embeddingId(), "score", doc.score(),"content", doc.embedded().text(),"embedding", doc.embedding().vector()));
             }
         }
     }

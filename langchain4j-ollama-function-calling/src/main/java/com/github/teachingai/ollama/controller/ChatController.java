@@ -1,17 +1,17 @@
 package com.github.teachingai.ollama.controller;
 
 import com.github.teachingai.ollama.request.ApiRequest;
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.Generation;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.ChatOptions;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.ai.ollama.OllamaChatClient;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.input.Prompt;
+import dev.langchain4j.model.input.PromptTemplate;
+import dev.langchain4j.model.output.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -23,48 +23,74 @@ import java.util.stream.Collectors;
 @RestController
 public class ChatController {
 
-    private final OllamaChatClient chatClient;
+    private final ChatLanguageModel chatLanguageModel;
+    private final StreamingChatLanguageModel streamingChatLanguageModel;
+    private final List<ToolSpecification> toolSpecifications;
 
     @Autowired
-    public ChatController(OllamaChatClient chatClient) {
-        this.chatClient = chatClient;
+    public ChatController(ChatLanguageModel chatLanguageModel,
+                          StreamingChatLanguageModel streamingChatLanguageModel,
+                          List<ToolSpecification> toolSpecifications) {
+        this.chatLanguageModel = chatLanguageModel;
+        this.streamingChatLanguageModel = streamingChatLanguageModel;
+        this.toolSpecifications = toolSpecifications;
     }
 
     @GetMapping("/v1/generate")
     public Map generate(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
-        return Map.of("generation", chatClient.call(message));
+        return Map.of("generation", chatLanguageModel.generate(message));
     }
 
     @GetMapping("/v1/prompt")
-    public List<Generation> prompt(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
-        PromptTemplate promptTemplate = new PromptTemplate("Tell me a {adjective} joke about {topic}");
-        Prompt prompt = promptTemplate.create(Map.of("adjective", "funny", "topic", "cats"));
-        return chatClient.call(prompt).getResults();
+    public Response<AiMessage> prompt( Map<String, Object> variables) {
+        PromptTemplate promptTemplate = PromptTemplate.from("Tell me a {adjective} joke about {topic}");
+        Prompt prompt = promptTemplate.apply(variables);
+        return chatLanguageModel.generate(List.of(new UserMessage(prompt.text())), toolSpecifications);
     }
 
     @PostMapping("/v1/chat/completions")
-    public Flux<ChatResponse> chatCompletions(@RequestBody ApiRequest.ChatCompletionRequest chatRequest) {
+    public Flux<AiMessage> chatCompletions(@RequestBody ApiRequest.ChatCompletionRequest chatRequest) {
 
         chatRequest.messages().forEach(System.out::println);
 
-
-        ChatOptions modelOptions = new OllamaOptions()
-                .withModel(chatRequest.model())
-                .withTemperature(chatRequest.temperature()).withTopP(chatRequest.topP());
-
-        List<Message> messages = chatRequest.messages().stream().map(msg -> {
+        List<ChatMessage> messages = chatRequest.messages().stream().map(msg -> {
             switch (msg.role()) {
                 case ASSISTANT:
-                    return new AssistantMessage(msg.content());
+                    return new AiMessage(msg.content());
                 case SYSTEM:
                     return new SystemMessage(msg.content());
                 default:
                     return new UserMessage(msg.content());
             }
         }).collect(Collectors.toList());
+        //
+        return Flux.create(sink -> {
+            streamingChatLanguageModel.generate(messages, new StreamingResponseHandler<>() {
 
-        Prompt prompt = new Prompt(messages, modelOptions);
-        return chatClient.stream(prompt);
+                @Override
+                public void onNext(String token) {
+                    System.out.println("Token: " + token);
+                    sink.next(new AiMessage(token));
+                }
+
+                @Override
+                public void onComplete(Response<AiMessage> response) {
+                    sink.complete();
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    System.out.println("Error: " + error.getMessage());
+                    sink.error(error);
+                }
+
+            });
+        });
+
     }
+
+
+
+
 
 }

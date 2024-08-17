@@ -1,10 +1,6 @@
 package com.github.teachingai.ollama;
 
 import com.alibaba.fastjson2.JSONObject;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.reader.ExtractedTextFormatter;
-import org.springframework.ai.reader.pdf.ParagraphPdfDocumentReader;
-import org.springframework.ai.reader.pdf.config.PdfDocumentReaderConfig;
 
 import java.util.List;
 

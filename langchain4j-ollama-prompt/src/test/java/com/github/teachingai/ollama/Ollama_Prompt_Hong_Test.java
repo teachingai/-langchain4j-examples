@@ -1,20 +1,20 @@
 package com.github.teachingai.ollama;
 
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.ollama.OllamaChatClient;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.input.Prompt;
+import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.output.Response;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -35,10 +35,14 @@ public class Ollama_Prompt_Hong_Test {
      */
     public static void main(String[] args) throws IOException {
 
-        var ollamaApi = new OllamaApi();
-        var chatClient = new OllamaChatClient(ollamaApi);
+        ChatLanguageModel chatLanguageModel = OllamaChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("qwen2-7b-kuakua") // try "mistral", "llama2", "codellama", "phi" or "tinyllama"
+                .temperature(0.9D)
+                .timeout(Duration.ofSeconds(60))
+                .build();
 
-        List<Message> historyList = new ArrayList<>();
+        List<ChatMessage> historyList = new ArrayList<>();
         // 系统提示消息
         Resource systemResource = new ClassPathResource("prompts/hong-message.st");
         String systemPrompt =  systemResource.getContentAsString(StandardCharsets.UTF_8);
@@ -53,7 +57,7 @@ public class Ollama_Prompt_Hong_Test {
                     .withLowVRAM(Boolean.TRUE)
                     .withSeed(ThreadLocalRandom.current().nextInt())
             );
-            Flux<ChatResponse> chatResponse = chatClient.stream(prompt);
+            Response<AiMessage> chatResponse = chatLanguageModel.generate(prompt.toUserMessage());
             System.out.print(">>> ");
             StringBuilder sb = new StringBuilder();
             chatResponse.doOnNext(response -> {

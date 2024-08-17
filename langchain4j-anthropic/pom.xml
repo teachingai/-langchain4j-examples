@@ -59,7 +59,7 @@
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-spring-boot-starter</artifactId>
+            <artifactId>langchain4j-anthropic-spring-boot-starter</artifactId>
         </dependency>
         <!-- For Embedding  -->
         <dependency>

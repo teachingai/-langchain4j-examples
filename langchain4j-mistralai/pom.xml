@@ -27,6 +27,10 @@
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-mistral-ai</artifactId>
         </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+        </dependency>
         <!-- For LLM Observe: Langchain4j + LangFuse + Byte Buddy + AOP
         <dependency>
             <groupId>dev.langchain4j</groupId>

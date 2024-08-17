@@ -1,22 +1,20 @@
 package com.github.teachingai.ollama;
 
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.Generation;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.SystemPromptTemplate;
-import org.springframework.ai.ollama.OllamaChatClient;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
-import org.springframework.beans.factory.annotation.Value;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.input.Prompt;
+import dev.langchain4j.model.input.PromptTemplate;
+import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.output.Response;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -31,14 +29,18 @@ public class Ollama_Prompt_Test11 {
      */
     public static void main(String[] args) throws IOException {
 
-        var ollamaApi = new OllamaApi();
-        var chatClient = new OllamaChatClient(ollamaApi);
+        ChatLanguageModel chatLanguageModel = OllamaChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("qwen:7b") // try "mistral", "llama2", "codellama", "phi" or "tinyllama"
+                .temperature(0.9D)
+                .timeout(Duration.ofSeconds(60))
+                .build();
 
         Resource systemResource = new ClassPathResource("prompts/system-message.st");
         String systemPrompt =  systemResource.getContentAsString(StandardCharsets.UTF_8);
 
-        SystemPromptTemplate systemPromptTemplate = new SystemPromptTemplate("{prompt}");
-        Message systemMessage = systemPromptTemplate.createMessage(Map.of("prompt", systemPrompt));
+        PromptTemplate systemPromptTemplate = new PromptTemplate("{prompt}");
+        Prompt prompt = systemPromptTemplate.apply(Map.of("prompt", systemPrompt));
 
         String input_text = "小明本学期表现数据：{\n" +
                 "  \"基础信息\": {\n" +
@@ -93,16 +95,22 @@ public class Ollama_Prompt_Test11 {
                 "  }\n" +
                 "}";
 
-        List<Message> messages  = List.of(systemMessage, new UserMessage(input_text), new UserMessage("请一步步的分析前面给的数据，写200字关于小明的综合评价评语，不需要分析过程，只需要返回评语"));
+        List<ChatMessage> messages  = List.of(prompt.toSystemMessage(), new UserMessage(input_text), new UserMessage("请一步步的分析前面给的数据，写200字关于小明的综合评价评语，不需要分析过程，只需要返回评语"));
 
-        Prompt prompt = new Prompt(messages, OllamaOptions.create()
-                .withModel("qwen2")
-                .withTemperature(0f));
+        Response<AiMessage> response = chatLanguageModel.generate(messages);
 
-        ChatResponse resp = chatClient.call(prompt);
+        String content = response.content().text();
 
-        for (Generation generation : resp.getResults()) {
-            System.out.println(generation.getOutput().getContent());
+        messages.add(new AiMessage(content));
+
+        for (ChatMessage message : messages) {
+            if(message instanceof SystemMessage systemMessage){
+                System.out.println(systemMessage.text());
+            } else if(message instanceof UserMessage userMessage){
+                System.out.println(userMessage.text());
+            } else if(message instanceof AiMessage aiMessage){
+                System.out.println(aiMessage.text());
+            }
         }
 
     }

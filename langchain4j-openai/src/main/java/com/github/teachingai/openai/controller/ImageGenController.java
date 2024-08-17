@@ -1,28 +1,29 @@
 package com.github.teachingai.openai.controller;
 
-import org.springframework.ai.image.*;
+import com.github.teachingai.openai.request.ImageGenRequest;
+import dev.langchain4j.data.image.Image;
+import dev.langchain4j.model.image.ImageModel;
+import dev.langchain4j.model.output.Response;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.net.URI;
+
 @Controller
 public class ImageGenController {
 
-    private final ImageClient imageClient;
+    private final ImageModel imageModel;
 
-    public ImageGenController(ImageClient imageClient) {
-        this.imageClient = imageClient;
+    public ImageGenController(ImageModel imageModel) {
+        this.imageModel = imageModel;
     }
 
     @PostMapping("/imagegen")
     public String imageGen(@RequestBody ImageGenRequest request) {
-        ImageOptions options = ImageOptionsBuilder.builder()
-                .withModel("dall-e-3")
-                .build();
 
-        ImagePrompt imagePrompt = new ImagePrompt(request.prompt(), options);
-        ImageResponse response = imageClient.call(imagePrompt);
-        String imageUrl = response.getResult().getOutput().getUrl();
+        Response<Image> response = imageModel.generate(request.prompt());
+        URI imageUrl = response.content().url();
 
         return "redirect:" + imageUrl;
     }

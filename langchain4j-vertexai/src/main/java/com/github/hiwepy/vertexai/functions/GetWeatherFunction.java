@@ -5,28 +5,27 @@ import com.fasterxml.jackson.annotation.JsonClassDescription;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.benmanes.caffeine.cache.*;
+import dev.langchain4j.agent.tool.P;
+import dev.langchain4j.agent.tool.Tool;
 import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.springframework.ai.retry.RetryUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.web.client.RestClient;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 /**
  * 免费天气查询
  * https://www.sojson.com/api/weather.html
  */
 @Slf4j
-public class GetWeatherFunction implements Function<GetWeatherFunction.Request, GetWeatherFunction.Response> {
+public class GetWeatherFunction {
 
     //请求连接地址
     private final static String SOJSON_WEATHER_URL = "http://t.weather.sojson.com/api/weather/city";
 
-    private final static RestClient restClient = RestClient.builder().baseUrl(SOJSON_WEATHER_URL)
-            .defaultStatusHandler(RetryUtils.DEFAULT_RESPONSE_ERROR_HANDLER).build();
+    private final static RestClient restClient = RestClient.builder().baseUrl(SOJSON_WEATHER_URL).build();
 
     private final LoadingCache<String, Optional<JSONObject>> WEATHER_DATA_CACHES = Caffeine.newBuilder()
             // 设置写缓存后1个小时过期
@@ -61,10 +60,11 @@ public class GetWeatherFunction implements Function<GetWeatherFunction.Request, 
             });
 
 
-    public enum Unit { C, F }
+    public enum TemperatureUnit { C, F }
 
     @JsonClassDescription("Get the weather in location")
-    public record Request(String cityId, Unit unit) {}
+    public record Request( @JsonProperty("cityId") @P("城市ID") String cityId,
+                           @JsonProperty("unit") @P("温度单位，C:摄氏度，F: 华氏度") TemperatureUnit unit) {}
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public record Response(
@@ -73,23 +73,23 @@ public class GetWeatherFunction implements Function<GetWeatherFunction.Request, 
             @JsonProperty("pm10") double pm10,
             @JsonProperty("quality") String quality,
             @JsonProperty("wendu") double wendu,
-            @JsonProperty("unit") Unit unit) {
-        public Response(double wendu, Unit unit) {
+            @JsonProperty("unit") TemperatureUnit unit) {
+        public Response(double wendu, TemperatureUnit unit) {
             this(0.0, 0.0, 0.0, "", wendu, unit);
         }
 
     }
 
-    @Override
-    public Response apply(Request request) {
+    @Tool("获取天气：根据给出的城市ID获取天气信息")
+    public Response getWeather(@P("获取天气的请求参数对象") Request request) {
         Optional<JSONObject> opt = WEATHER_DATA_CACHES.get(request.cityId());
         if (opt.isPresent()) {
             JSONObject jsonObject = opt.get();
             JSONObject data = jsonObject.getJSONObject("data");
             return new Response(data.getDouble("wendu"), data.getDouble("pm25"), data.getDouble("pm10"),
-                    data.getString("quality"), data.getDouble("wendu"), Unit.C);
+                    data.getString("quality"), data.getDouble("wendu"), TemperatureUnit.C);
         }
-        return new Response(30.0, Unit.C);
+        return new Response(30.0, TemperatureUnit.C);
     }
 
 }

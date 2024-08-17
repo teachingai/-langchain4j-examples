@@ -1,20 +1,22 @@
 package com.github.teachingai.ollama;
 
-import org.springframework.ai.ollama.OllamaChatClient;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
 
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.ollama.OllamaChatModel;
+
+import java.time.Duration;
 import java.util.Scanner;
 
 public class OllamaChatTest {
 
     public static void main(String[] args) {
 
-        var ollamaApi = new OllamaApi();
-        var chatClient = new OllamaChatClient(ollamaApi)
-                .withDefaultOptions(OllamaOptions.create()
-                        .withModel("qwen:7b")
-                        .withTemperature(0.9f));
+        ChatLanguageModel model = OllamaChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("qwen:7b") // try "mistral", "llama2", "codellama", "phi" or "tinyllama"
+                .temperature(0.9D)
+                .timeout(Duration.ofSeconds(60))
+                .build();
 
         Scanner scanner = new Scanner(System.in);
         while (true) {
@@ -23,8 +25,8 @@ public class OllamaChatTest {
             if (message.equals("exit")) {
                 break;
             }
-            String resp = chatClient.call(message);
-            System.out.println("<<< " + resp);
+            String answer =  model.generate(message);
+            System.out.println("<<< " + answer);
         }
     }
 

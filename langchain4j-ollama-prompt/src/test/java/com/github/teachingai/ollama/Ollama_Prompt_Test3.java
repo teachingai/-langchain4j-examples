@@ -1,23 +1,26 @@
 package com.github.teachingai.ollama;
 
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.Generation;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.ollama.OllamaChatClient;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.output.Response;
 
+import java.time.Duration;
 import java.util.List;
 
 public class Ollama_Prompt_Test3 {
 
     public static void main(String[] args) {
 
-        var ollamaApi = new OllamaApi();
-        var chatClient = new OllamaChatClient(ollamaApi);
+        ChatLanguageModel chatLanguageModel = OllamaChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("qwen:7b") // try "mistral", "llama2", "codellama", "phi" or "tinyllama"
+                .temperature(0.9D)
+                .timeout(Duration.ofSeconds(60))
+                .build();
 
         // 系统提示消息
         SystemMessage systemMessage = new SystemMessage("你的任务是识别用户对手机流量套餐产品的选择条件。\n" +
@@ -42,17 +45,13 @@ public class Ollama_Prompt_Test3 {
 
         UserMessage userMessage = new UserMessage(input_text);
 
-        List<Message> messages  = List.of(systemMessage, userMessage);
+        List<ChatMessage> messages  = List.of(systemMessage, userMessage);
 
-        Prompt prompt = new Prompt(messages, OllamaOptions.create()
-                .withModel("qwen2:7b")
-                .withTemperature(0f));
+        Response<AiMessage> response = chatLanguageModel.generate(messages);
 
-        ChatResponse resp = chatClient.call(prompt);
+        String content = response.content().text();
 
-        for (Generation generation : resp.getResults()) {
-            System.out.println(generation.getOutput().getContent());
-        }
+        System.out.println(response.content().text());
 
     }
 

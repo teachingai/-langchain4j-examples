@@ -1,30 +1,32 @@
 package com.github.teachingai.ollama;
 
 import com.alibaba.fastjson2.JSONObject;
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.Generation;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.SystemMessage;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.ollama.OllamaChatClient;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.output.Response;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class Ollama_Prompt_Test5 {
 
-    private static OllamaApi ollamaApi = new OllamaApi();
-    private static OllamaChatClient chatClient = new OllamaChatClient(ollamaApi);
+    private static ChatLanguageModel chatLanguageModel = OllamaChatModel.builder()
+            .baseUrl("http://localhost:11434")
+            .modelName("qwen:7b") // try "mistral", "llama2", "codellama", "phi" or "tinyllama"
+            .temperature(0.9D)
+            .timeout(Duration.ofSeconds(60))
+            .build();
 
     static class NLU {
 
         String prompt_template;
-        List<Message> messages = new ArrayList<>();
+        List<ChatMessage> messages = new ArrayList<>();
 
         private NLU(String instruction, String output_format, String examples) {
             this.prompt_template = String.format("{instruction} \n\n {output_format} \n\n {examples} \n\n 用户输入：\n__INPUT__");
@@ -32,12 +34,9 @@ public class Ollama_Prompt_Test5 {
 
         private String getCompletion(NLU self, String promptStr, String model){
             messages.add(new UserMessage(promptStr));
-            Prompt prompt = new Prompt(messages, OllamaOptions.create()
-                    .withModel("qwen2:7b")
-                    .withTemperature(0f)
-                    .withNumGPU(3));
-            ChatResponse response = chatClient.call(prompt);
-           return response.getResults().get(0).getOutput().getContent();
+            Response<AiMessage> response = chatLanguageModel.generate(messages);
+            String content = response.content().text();
+            return content;
         }
 
         private String parse(NLU self, String user_input, String model){
@@ -70,8 +69,12 @@ public class Ollama_Prompt_Test5 {
 
     public static void main(String[] args) {
 
-        var ollamaApi = new OllamaApi();
-        var chatClient = new OllamaChatClient(ollamaApi);
+        ChatLanguageModel chatLanguageModel = OllamaChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("qwen:7b") // try "mistral", "llama2", "codellama", "phi" or "tinyllama"
+                .temperature(0.9D)
+                .timeout(Duration.ofSeconds(60))
+                .build();
 
         // 系统提示消息
         SystemMessage systemMessage = new SystemMessage("你的任务是识别用户对手机流量套餐产品的选择条件。\n" +
@@ -126,23 +129,18 @@ public class Ollama_Prompt_Test5 {
 
         UserMessage userMessage = new UserMessage(input_text);
 
-        List<Message> messages  = List.of(systemMessage,
-                new AssistantMessage("客服：有什么可以帮您"),
+        List<ChatMessage> messages  = List.of(systemMessage,
+                new AiMessage("客服：有什么可以帮您"),
                 new UserMessage("用户：有什么100G以上的套餐推荐"),
-                new AssistantMessage("客服：我们有畅游套餐和无限套餐，您有什么价格倾向吗？"),
+                new AiMessage("客服：我们有畅游套餐和无限套餐，您有什么价格倾向吗？"),
                 new UserMessage("用户：" + input_text),
                 userMessage);
 
-        Prompt prompt = new Prompt(messages, OllamaOptions.create()
-                .withModel("qwen2:7b")
-                .withTemperature(0f)
-                .withNumGPU(3));
+        Response<AiMessage> response = chatLanguageModel.generate(messages);
 
-        ChatResponse resp = chatClient.call(prompt);
+        String content = response.content().text();
 
-        for (Generation generation : resp.getResults()) {
-            System.out.println(generation.getOutput().getContent());
-        }
+        System.out.println(response.content().text());
 
     }
 

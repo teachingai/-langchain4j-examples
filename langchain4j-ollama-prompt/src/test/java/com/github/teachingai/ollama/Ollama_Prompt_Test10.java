@@ -1,22 +1,23 @@
 package com.github.teachingai.ollama;
 
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.ai.ollama.OllamaChatClient;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.input.Prompt;
+import dev.langchain4j.model.input.PromptTemplate;
+import dev.langchain4j.model.ollama.OllamaChatModel;
+import dev.langchain4j.model.output.Response;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class Ollama_Prompt_Test10 {
 
-    private static List<Message> messages = new ArrayList<>();
+    private static List<ChatMessage> messages = new ArrayList<>();
 
     private static String instruction = "给定一段用户与手机流量套餐客服的对话，。\n" +
             "你的任务是判断客服介绍产品信息的准确性：\n" +
@@ -39,28 +40,27 @@ public class Ollama_Prompt_Test10 {
                 "校园套餐，月费150元，200G流量，仅限在校生。"));
     }*/
 
-    private static String getCompletion(OllamaChatClient chatClient, String promptStr, String model){
+    private static String getCompletion(ChatLanguageModel chatLanguageModel, String promptStr, String model){
 
         messages.add(new UserMessage(promptStr));
 
-        Prompt prompt = new Prompt(messages, OllamaOptions.create()
-                .withModel(model)
-                .withTemperature(0f)
-                .withNumGPU(3));
+        Response<AiMessage> response = chatLanguageModel.generate(messages);
 
-        ChatResponse response = chatClient.call(prompt);
+        String content = response.content().text();
 
-        String content = response.getResult().getOutput().getContent();
-
-        messages.add(new AssistantMessage(content));
+        messages.add(new AiMessage(content));
 
         return content;
     }
 
     public static void main(String[] args) {
 
-        var ollamaApi = new OllamaApi();
-        var chatClient = new OllamaChatClient(ollamaApi);
+        ChatLanguageModel chatLanguageModel = OllamaChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("qwen:7b") // try "mistral", "llama2", "codellama", "phi" or "tinyllama"
+                .temperature(0.9D)
+                .timeout(Duration.ofSeconds(60))
+                .build();
 
         String output_format = "如果信息准确，输出：Y\n" +
                 "如果信息不准确，输出：N\n";
@@ -72,16 +72,22 @@ public class Ollama_Prompt_Test10 {
 
         PromptTemplate promptTemplate = new PromptTemplate("{instruction} \n\n {output_format} \n\n {cot} \n\n 对话记录：{context}");
         // Prompt prompt = promptTemplate.create(Map.of("instruction", instruction, "output_format", output_format, "cot", cot, "context", context));
-        String promptStr = promptTemplate.render(Map.of("instruction", instruction, "output_format", output_format, "cot", cot, "context", context));
+        Prompt prompt = promptTemplate.apply(Map.of("instruction", instruction, "output_format", output_format, "cot", cot, "context", context));
 
         // 连续调用 5 次
         for (int i = 0; i < 5; i++) {
             System.out.println("------第" + (i + 1) + "次------");
-            getCompletion(chatClient, promptStr, "qwen2:7b");
+            getCompletion(chatLanguageModel, prompt.text(), "qwen2:7b");
         }
 
-        for (Message message : messages) {
-            System.out.println(message.getContent());
+        for (ChatMessage message : messages) {
+            if(message instanceof SystemMessage systemMessage){
+                System.out.println(systemMessage.text());
+            } else if(message instanceof UserMessage userMessage){
+                System.out.println(userMessage.text());
+            } else if(message instanceof AiMessage aiMessage){
+                System.out.println(aiMessage.text());
+            }
         }
 
     }

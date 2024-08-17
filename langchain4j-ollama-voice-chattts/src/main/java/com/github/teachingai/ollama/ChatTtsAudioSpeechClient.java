@@ -6,22 +6,18 @@ import com.github.teachingai.ollama.api.ChatTtsResponseHeaderExtractor;
 import com.github.teachingai.ollama.api.common.OllamaApiException;
 import com.github.teachingai.ollama.audio.speech.*;
 import com.github.teachingai.ollama.metadata.audio.ChatTtsAudioSpeechResponseMetadata;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.metadata.RateLimit;
-import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.model.ModelOptions;
 import org.springframework.ai.model.ModelOptionsUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.Set;
 
 public class ChatTtsAudioSpeechClient implements SpeechClient, StreamingSpeechClient {
 

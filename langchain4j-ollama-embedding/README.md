@@ -297,9 +297,9 @@ public class OllamaEmbeddingTest4 {
         /**
          * 1、简单的文本嵌入
          */
-        VectorStore vectorStore = new SimpleVectorStore(embeddingClient);
+        VectorStore embeddingStore = new SimpleVectorStore(embeddingClient);
         // 将嵌入存储在 VectorStore
-        vectorStore.add(List.of(
+        embeddingStore.add(List.of(
                 new Document("床前明月光，疑是地上霜。举头望明月，低头思故乡。"),
                 new Document("李白乘舟将欲行，忽闻岸上踏歌声。桃花潭水深千尺，不及汪伦送我情。"),
                 new Document("日照香炉生紫烟，遥看瀑布挂前川。飞流直下三千尺，疑是银河落九天。"),
@@ -318,7 +318,7 @@ public class OllamaEmbeddingTest4 {
             System.out.print("Embedding Query: " + embeddingClient.embed(query));
             // Retrieve embeddings
             SearchRequest request = SearchRequest.query(query).withTopK(1).withSimilarityThreshold(0.6);
-            List<Document> similarDocuments  = vectorStore.similaritySearch(request);
+            List<Document> similarDocuments  = embeddingStore.similaritySearch(request);
             System.out.println("查询结果: ");
             for (Document document : similarDocuments ) {
                 System.out.println( JSONObject.of( "id", document.getId(), "content", document.getContent(), "embedding", document.getEmbedding(),"metadata", document.getMetadata()));
@@ -368,9 +368,9 @@ public class OllamaEmbeddingTest4 {
         /**
          * 1、简单的文本嵌入
          */
-        VectorStore vectorStore = new SimpleVectorStore(embeddingClient);
+        VectorStore embeddingStore = new SimpleVectorStore(embeddingClient);
         // 将嵌入存储在 VectorStore
-        vectorStore.add(List.of(
+        embeddingStore.add(List.of(
                 new Document("床前明月光，疑是地上霜。举头望明月，低头思故乡。"),
                 new Document("李白乘舟将欲行，忽闻岸上踏歌声。桃花潭水深千尺，不及汪伦送我情。"),
                 new Document("日照香炉生紫烟，遥看瀑布挂前川。飞流直下三千尺，疑是银河落九天。"),
@@ -389,7 +389,7 @@ public class OllamaEmbeddingTest4 {
             System.out.print("Embedding Query: " + embeddingClient.embed(query));
             // Retrieve embeddings
             SearchRequest request = SearchRequest.query(query).withTopK(1).withSimilarityThreshold(0.6);
-            List<Document> similarDocuments  = vectorStore.similaritySearch(request);
+            List<Document> similarDocuments  = embeddingStore.similaritySearch(request);
             System.out.println("查询结果: ");
             for (Document document : similarDocuments ) {
                 System.out.println( JSONObject.of( "id", document.getId(), "content", document.getContent(), "embedding", document.getEmbedding(),"metadata", document.getMetadata()));

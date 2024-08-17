@@ -3,8 +3,8 @@ package com.github.teachingai.ollama;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.teachingai.ollama.api.EmotiVoiceAudioApi;
-import com.github.teachingai.ollama.api.EmotiVoiceAudioApi.SpeechRequest.Voice;
 import com.github.teachingai.ollama.api.EmotiVoiceAudioApi.SpeechRequest.AudioResponseFormat;
+import com.github.teachingai.ollama.api.EmotiVoiceAudioApi.SpeechRequest.Voice;
 import org.springframework.ai.model.ModelOptions;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)

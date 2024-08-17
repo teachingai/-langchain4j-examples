@@ -1,16 +1,13 @@
 package com.github.teachingai.ollama;
 
-import org.springframework.ai.chat.ChatResponse;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.prompt.Prompt;
-import org.springframework.ai.ollama.OllamaChatClient;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.ollama.OllamaChatModel;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -30,10 +27,14 @@ public class Ollama_Prompt_Kuakua_Test3 {
      */
     public static void main(String[] args) throws IOException {
 
-        var ollamaApi = new OllamaApi();
-        var chatClient = new OllamaChatClient(ollamaApi);
+        ChatLanguageModel chatLanguageModel = OllamaChatModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("qwen2-7b-kuakua") // try "mistral", "llama2", "codellama", "phi" or "tinyllama"
+                .temperature(0.9D)
+                .timeout(Duration.ofSeconds(60))
+                .build();
 
-        List<Message> historyList = new ArrayList<>();
+        List<ChatMessage> historyList = new ArrayList<>();
         String firstText = "今天工作很累呢～";
         System.out.println("<<< " + firstText);
         // 用户输入消息
@@ -41,13 +42,8 @@ public class Ollama_Prompt_Kuakua_Test3 {
         // 生成对话
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            Prompt prompt = new Prompt(historyList, OllamaOptions.create()
-                    .withModel("qwen2-7b-kuakua")
-                    .withTemperature(0.7f)
-                    .withLowVRAM(Boolean.TRUE)
-                    .withSeed(ThreadLocalRandom.current().nextInt())
-                );
-            Flux<ChatResponse> chatResponse = chatClient.stream(prompt);
+
+            Flux<ChatResponse> chatResponse = chatLanguageModel.generate(historyList);
             System.out.print(">>> ");
             StringBuilder sb = new StringBuilder();
             chatResponse.doOnNext(response -> {

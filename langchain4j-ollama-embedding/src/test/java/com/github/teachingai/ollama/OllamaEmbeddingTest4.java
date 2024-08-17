@@ -1,15 +1,16 @@
 package com.github.teachingai.ollama;
 
 import com.alibaba.fastjson2.JSONObject;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.ollama.OllamaEmbeddingClient;
-import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.SimpleVectorStore;
-import org.springframework.ai.vectorstore.VectorStore;
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
+import dev.langchain4j.model.output.Response;
+import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
+import dev.langchain4j.store.embedding.EmbeddingStore;
+import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
 
-import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -28,20 +29,19 @@ public class OllamaEmbeddingTest4 {
          * snowflake-arctic-embed ：https://ollama.com/library/snowflake-arctic-embed
          * shaw/dmeta-embedding-zh：https://ollama.com/shaw/dmeta-embedding-zh
          */
-        var ollamaApi = new OllamaApi();
-        var embeddingClient = new OllamaEmbeddingClient(ollamaApi)
-                .withDefaultOptions(OllamaOptions.create().withModel("shaw/dmeta-embedding-zh"));
+        OllamaEmbeddingModel embeddingModel = OllamaEmbeddingModel.builder()
+                .baseUrl("http://localhost:11434")
+                .modelName("shaw/dmeta-embedding-zh")
+                .build();
         /**
          * 1、简单的文本嵌入
          */
-        VectorStore vectorStore = new SimpleVectorStore(embeddingClient);
+        EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
         // 将嵌入存储在 VectorStore
-        vectorStore.add(List.of(
-            new Document("床前明月光，疑是地上霜。举头望明月，低头思故乡。"),
-            new Document("李白乘舟将欲行，忽闻岸上踏歌声。桃花潭水深千尺，不及汪伦送我情。"),
-            new Document("日照香炉生紫烟，遥看瀑布挂前川。飞流直下三千尺，疑是银河落九天。"),
-            new Document("独在异乡为异客，每逢佳节倍思亲。遥知兄弟登高处，遍插茱萸少一人。")
-        ));
+        embeddingStore.add(embeddingModel.embed("白日依山尽，黄河入海流。欲穷千里目，更上一层楼。").content(), TextSegment.from("白日依山尽，黄河入海流。欲穷千里目，更上一层楼。"));
+        embeddingStore.add(embeddingModel.embed("青山依旧在，几度夕阳红。白发渔樵江渚上，惯看秋月春风。").content(), TextSegment.from("青山依旧在，几度夕阳红。白发渔樵江渚上，惯看秋月春风。"));
+        embeddingStore.add(embeddingModel.embed("一片孤城万仞山，羌笛何须怨杨柳。春风不度玉门关。").content(), TextSegment.from("一片孤城万仞山，羌笛何须怨杨柳。春风不度玉门关。"));
+        embeddingStore.add(embeddingModel.embed("危楼高百尺，手可摘星辰。不敢高声语，恐惊天上人。").content(), TextSegment.from("危楼高百尺，手可摘星辰。不敢高声语，恐惊天上人。"));
         /**
          * 2、简单的相似度搜索
          */
@@ -52,14 +52,18 @@ public class OllamaEmbeddingTest4 {
             if (query.equals("exit")) {
                 break;
             }
-            System.out.print("Embedding Query: " + embeddingClient.embed(query));
-            // Retrieve embeddings
-            SearchRequest request = SearchRequest.query(query).withTopK(4).withSimilarityThreshold(0.4);
-            List<Document> similarDocuments  = vectorStore.similaritySearch(request);
+            Response<Embedding> queryEmbedding = embeddingModel.embed(query);
+            System.out.println("Embedding Query: " + queryEmbedding.content());
+            EmbeddingSearchRequest request = EmbeddingSearchRequest.builder()
+                    .queryEmbedding(queryEmbedding.content())
+                    .maxResults(5)
+                    .minScore(0.1)
+                    //.filter(new IsGreaterThanOrEqualTo(key, value))
+                    .build();
+            EmbeddingSearchResult<TextSegment> embeddingSearchResult = embeddingStore.search(request);
             System.out.println("查询结果: ");
-            for (Document document : similarDocuments ) {
-                document.getMetadata().put("similarity", document.getMetadata().get("similarity"));
-                System.out.println( JSONObject.of( "id", document.getId(), "content", document.getContent(),"metadata", document.getMetadata(), "embedding", document.getEmbedding()));
+            for (EmbeddingMatch<TextSegment> doc : embeddingSearchResult.matches()) {
+                System.out.println( JSONObject.of( "id", doc.embeddingId(), "score", doc.score(),"content", doc.embedded().text(),"embedding", doc.embedding().vector()));
             }
         }
     }

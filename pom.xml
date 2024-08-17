@@ -37,8 +37,6 @@
         <module>langchain4j-huaweiai-gallery</module>
         <module>langchain4j-huaweiai-pangu</module>
         <module>langchain4j-huggingface</module>
-        <module>langchain4j-jina</module>
-        <module>langchain4j-jlama</module>
         <module>langchain4j-llmsfreeapi</module>
         <module>langchain4j-localai</module>
         <module>langchain4j-minimax</module>
@@ -438,7 +436,7 @@
                 <artifactId>langchain4j-code-execution-engine-judge0</artifactId>
                 <version>${langchain4j.version}</version>
             </dependency>
-            <!-- document loaders -->
+            <!-- Langchain4j Document Loaders -->
             <dependency>
                 <groupId>dev.langchain4j</groupId>
                 <artifactId>langchain4j-document-loader-amazon-s3</artifactId>
